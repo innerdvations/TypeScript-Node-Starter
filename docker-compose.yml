@@ -1,0 +1,30 @@
+version: '3.1'
+services:
+  mongo:
+    image: mongo
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+  app:
+    container_name: node-app
+    restart: always
+    build: .
+    command: npm run watch
+    environment:
+      - MONGODB_URI_LOCAL=mongodb://mongo:27017/api
+    ports:
+      - "3000:3000"
+    links:
+      - mongo
+    depends_on:
+      - mongo
+    volumes:
+        - ./:/usr/src/app 
+        - nodemodules:/usr/src/app/node_modules
+
+volumes:
+    mongo-data: {}
+    nodemodules: {}
+    apidata: {}
