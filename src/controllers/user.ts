@@ -8,6 +8,9 @@ import { IVerifyOptions } from "passport-local";
 import { WriteError } from "mongodb";
 import { check, sanitize, validationResult } from "express-validator";
 import "../config/passport";
+export interface DoneFunction {
+    (err?: any, token?: any, user?: any): void;
+}
 
 /**
  * Login page.
@@ -26,10 +29,10 @@ export const getLogin = (req: Request, res: Response) => {
  * Sign in using email and password.
  * @route POST /login
  */
-export const postLogin = async (req: Request, res: Response, next: NextFunction) => {
+export const postLogin = async (req: Request | any, res: Response, next: NextFunction) => {
     await check("email", "Email is not valid").isEmail().run(req);
     await check("password", "Password cannot be blank").isLength({min: 1}).run(req);
-    // eslint-disable-next-line @typescript-eslint/camelcase
+    // Previously had eslint-disable-next-line @typescript-eslint/camelcase
     await sanitize("email").normalizeEmail({ gmail_remove_dots: false }).run(req);
 
     const errors = validationResult(req);
@@ -83,7 +86,7 @@ export const postSignup = async (req: Request, res: Response, next: NextFunction
     await check("email", "Email is not valid").isEmail().run(req);
     await check("password", "Password must be at least 4 characters long").isLength({ min: 4 }).run(req);
     await check("confirmPassword", "Passwords do not match").equals(req.body.password).run(req);
-    // eslint-disable-next-line @typescript-eslint/camelcase
+    // Previously had eslint-disable-next-line @typescript-eslint/camelcase
     await sanitize("email").normalizeEmail({ gmail_remove_dots: false }).run(req);
 
     const errors = validationResult(req);
@@ -132,7 +135,7 @@ export const getAccount = (req: Request, res: Response) => {
  */
 export const postUpdateProfile = async (req: Request, res: Response, next: NextFunction) => {
     await check("email", "Please enter a valid email address.").isEmail().run(req);
-    // eslint-disable-next-line @typescript-eslint/camelcase
+    // Previously had eslint-disable-next-line @typescript-eslint/camelcase
     await sanitize("email").normalizeEmail({ gmail_remove_dots: false }).run(req);
 
     const errors = validationResult(req);
@@ -150,7 +153,7 @@ export const postUpdateProfile = async (req: Request, res: Response, next: NextF
         user.profile.gender = req.body.gender || "";
         user.profile.location = req.body.location || "";
         user.profile.website = req.body.website || "";
-        user.save((err: WriteError) => {
+        user.save((err:any) => { // TODO: should be a WriteError instead of any?
             if (err) {
                 if (err.code === 11000) {
                     req.flash("errors", { msg: "The email address you have entered is already associated with an account." });
@@ -183,7 +186,7 @@ export const postUpdatePassword = async (req: Request, res: Response, next: Next
     User.findById(user.id, (err, user: UserDocument) => {
         if (err) { return next(err); }
         user.password = req.body.password;
-        user.save((err: WriteError) => {
+        user.save((err:any) => { // TODO: should be a WriteError instead of any?
             if (err) { return next(err); }
             req.flash("success", { msg: "Password has been changed." });
             res.redirect("/account");
@@ -263,7 +266,7 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
     }
 
     async.waterfall([
-        function resetPassword(done: Function) {
+        function resetPassword(done: DoneFunction) {
             User
                 .findOne({ passwordResetToken: req.params.token })
                 .where("passwordResetExpires").gt(Date.now())
@@ -284,7 +287,7 @@ export const postReset = async (req: Request, res: Response, next: NextFunction)
                     });
                 });
         },
-        function sendResetPasswordEmail(user: UserDocument, done: Function) {
+        function sendResetPasswordEmail(user: UserDocument, done: DoneFunction) {
             const transporter = nodemailer.createTransport({
                 service: "SendGrid",
                 auth: {
@@ -328,7 +331,7 @@ export const getForgot = (req: Request, res: Response) => {
  */
 export const postForgot = async (req: Request, res: Response, next: NextFunction) => {
     await check("email", "Please enter a valid email address.").isEmail().run(req);
-    // eslint-disable-next-line @typescript-eslint/camelcase
+    // eslint-disable-next-line
     await sanitize("email").normalizeEmail({ gmail_remove_dots: false }).run(req);
 
     const errors = validationResult(req);
@@ -339,13 +342,13 @@ export const postForgot = async (req: Request, res: Response, next: NextFunction
     }
 
     async.waterfall([
-        function createRandomToken(done: Function) {
+        function createRandomToken(done: DoneFunction) {
             crypto.randomBytes(16, (err, buf) => {
                 const token = buf.toString("hex");
                 done(err, token);
             });
         },
-        function setRandomToken(token: AuthToken, done: Function) {
+        function setRandomToken(token: AuthToken, done: DoneFunction) {
             User.findOne({ email: req.body.email }, (err, user: any) => {
                 if (err) { return done(err); }
                 if (!user) {
@@ -359,7 +362,7 @@ export const postForgot = async (req: Request, res: Response, next: NextFunction
                 });
             });
         },
-        function sendForgotPasswordEmail(token: AuthToken, user: UserDocument, done: Function) {
+        function sendForgotPasswordEmail(token: AuthToken, user: UserDocument, done: DoneFunction) {
             const transporter = nodemailer.createTransport({
                 service: "SendGrid",
                 auth: {

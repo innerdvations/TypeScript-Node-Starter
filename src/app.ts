@@ -22,13 +22,25 @@ import * as contactController from "./controllers/contact";
 
 // API keys and Passport configuration
 import * as passportConfig from "./config/passport";
+import { Request } from "express-serve-static-core";
 
 // Create Express server
 const app = express();
 
+// TODO: WORKAROUND, remove when the connect-mongo and express-session types are updated
+declare global {
+    // @ts-ignore
+    namespace Express {
+      interface SessionData {
+        // @ts-ignore
+        cookie: SessionCookieData
+      }
+    }
+  }
+
 // Connect to MongoDB
 const mongoUrl = MONGODB_URI;
-mongoose.Promise = bluebird;
+(<any>mongoose).Promise = bluebird;
 
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true } ).then(
     () => { /** ready to use. The `mongoose.connect()` promise resolves to undefined. */ },
@@ -62,7 +74,7 @@ app.use((req, res, next) => {
     res.locals.user = req.user;
     next();
 });
-app.use((req, res, next) => {
+app.use((req:any, res, next) => {
     // After successful login, redirect back to the intended page
     if (!req.user &&
     req.path !== "/login" &&
@@ -112,7 +124,7 @@ app.get("/api/facebook", passportConfig.isAuthenticated, passportConfig.isAuthor
  * OAuth authentication routes. (Sign in)
  */
 app.get("/auth/facebook", passport.authenticate("facebook", { scope: ["email", "public_profile"] }));
-app.get("/auth/facebook/callback", passport.authenticate("facebook", { failureRedirect: "/login" }), (req, res) => {
+app.get("/auth/facebook/callback", passport.authenticate("facebook", { failureRedirect: "/login" }), (req:any, res) => {
     res.redirect(req.session.returnTo || "/");
 });
 
