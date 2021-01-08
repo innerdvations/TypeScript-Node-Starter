@@ -7,6 +7,19 @@ services:
     ports:
       - "27017:27017"
 
+  mongo-express:
+    restart: always
+    depends_on:
+        - mongo
+    image: mongo-express
+    environment:
+        - ME_PORT
+        - ME_CONFIG_MONGODB_SERVER
+        - ME_CONFIG_BASICAUTH_USERNAME
+        - ME_CONFIG_BASICAUTH_PASSWORD
+    ports:
+        - "${ME_PORT}:8081"
+
   app:
     container_name: node-app
     restart: always
