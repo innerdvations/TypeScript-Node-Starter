@@ -28,15 +28,17 @@ import { Request } from "express-serve-static-core";
 const app = express();
 
 // TODO: WORKAROUND, remove when the connect-mongo and express-session types are updated
+// @ts-ignore
 declare global {
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Express {
-      interface SessionData {
         // @ts-ignore
-        cookie: SessionCookieData
-      }
+        interface SessionData {
+            // @ts-ignore
+            cookie: SessionCookieData
+        }
     }
-  }
+}
 
 // Connect to MongoDB
 const mongoUrl = MONGODB_URI;

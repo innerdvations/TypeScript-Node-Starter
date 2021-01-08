@@ -9,7 +9,9 @@
     "semi": ["error", "always"],
     "quotes": ["error", "double"],
     "@typescript-eslint/explicit-function-return-type": "off",
-    "@typescript-eslint/no-explicit-any": 1,
+    "@typescript-eslint/no-explicit-any": 0,
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/ban-ts-ignore": "off",
     "@typescript-eslint/no-inferrable-types": [
       "warn", {
         "ignoreParameters": true
